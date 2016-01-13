@@ -8,6 +8,7 @@ namespace ShamefulOldGit.Actors
 {
 	public class RepositoryActor : ReceiveActor
 	{
+		private readonly string _dirPath;
 		private readonly Func<DateTime> _getDateTimeNow;
 		private const int MonthsPriorToNow = 0;
 		private const string ComparisonBranchName = "origin/develop";
@@ -16,6 +17,7 @@ namespace ShamefulOldGit.Actors
 
 		public RepositoryActor(string dirPath, Func<DateTime> getDateTimeNow)
 		{
+			_dirPath = dirPath;
 			_getDateTimeNow = getDateTimeNow ?? (() => DateTime.Now);
 			_repository = new Repository(dirPath);
 
@@ -28,7 +30,8 @@ namespace ShamefulOldGit.Actors
 				var oldNoMergedBranches = _repository.Branches.Where(b => b.Commits.Any()
 				                                                  && b.IsRemote
 				                                                  && BranchIsOld(b)
-				                                                  && BranchIsNoMerged(comparisonBranch, b)).ToList();
+				                                                  && BranchIsNoMerged(comparisonBranch, b))
+																  .ToList();
 
 				if (oldNoMergedBranches.Count == 0)
 				{
@@ -42,9 +45,31 @@ namespace ShamefulOldGit.Actors
 					var branchNameSuitableForAnActor = branch.Name
 						.Replace(@"/", "");
 					var branchActor = Context.ActorOf(Props.Create<BranchInfoActor>(), branchNameSuitableForAnActor);
-					branchActor.Tell(new BranchInfoActor.GetBranchInfo(_repository, branch));
+					branchActor.Tell(new BranchInfoActor.GetBranchInfo(_dirPath, _repository, branch));
 				}
 			});
+
+			Receive<BranchInfoAggregationActor.BranchInfoReportedToAggregator>(message =>
+			{
+				_oldNoMergedBranchNames.Remove(message.BranchName);
+
+				if (_oldNoMergedBranchNames.Count == 0)
+				{
+					Console.WriteLine($"There are no more branches to report for repo {_dirPath}");
+					Context.ActorSelection(ActorSelectionRouting.RepositoriesCoordinatorActorPath)
+						.Tell(new RepositoryAllAccountedFor(_dirPath));
+				}
+			});
+		}
+
+		public class RepositoryAllAccountedFor
+		{
+			public string DirPath { get; set; }
+
+			public RepositoryAllAccountedFor(string dirPath)
+			{
+				DirPath = dirPath;
+			}
 		}
 
 		private bool BranchIsOld(Branch branch)

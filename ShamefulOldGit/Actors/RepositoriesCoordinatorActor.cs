@@ -1,14 +1,48 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Akka.Actor;
 
 namespace ShamefulOldGit.Actors
 {
-    public class RepositoriesCoordinatorActor : ReceiveActor
+	public class RepositoriesCoordinatorActor : ReceiveActor
 	{
+		public List<string> _allRepositories; 
+
+		public RepositoriesCoordinatorActor()
+		{
+			Console.WriteLine("Initiated Repo coordinator.");
+
+			Receive<RepositoriesToReportOn>(message =>
+			{
+				_allRepositories = message.RepositoryPaths.ToList();
+
+				Console.WriteLine("Received repos to analyse.");
+				foreach (var repositoryPath in message.RepositoryPaths)
+				{
+					var repositoryActorName = repositoryPath.Split('\\').Last();
+					var repoActor = Context.ActorOf(Props.Create(() => new RepositoryActor(repositoryPath, null)), repositoryActorName);
+					repoActor.Tell(new Go());
+				}
+			});
+
+			Receive<RepositoryActor.RepositoryAllAccountedFor>(message =>
+			{
+				_allRepositories.Remove(message.DirPath);
+
+				if (_allRepositories.Count == 0)
+				{
+					Console.WriteLine("All Repos are accounted for.");
+					Context.ActorSelection(ActorSelectionRouting.BranchInfoAggregationActorPath)
+						.Tell(new AllRepositoriesAccountedFor());
+				}
+			});
+		}
+
+		public class AllRepositoriesAccountedFor
+		{
+		}
+
 		public class RepositoriesToReportOn
 		{
 			public RepositoriesToReportOn(IReadOnlyCollection<string> repositoryPaths)
@@ -16,22 +50,7 @@ namespace ShamefulOldGit.Actors
 				RepositoryPaths = repositoryPaths;
 			}
 
-			public IReadOnlyCollection<string> RepositoryPaths { get; private set; }  
+			public IReadOnlyCollection<string> RepositoryPaths { get; }
 		}
-	    public RepositoriesCoordinatorActor()
-	    {
-			Console.WriteLine("Initiated Repo coordinator.");
-
-		    Receive<RepositoriesToReportOn>(message =>
-		    {
-				Console.WriteLine("Received repos to analyse.");
-			    foreach (var repositoryPath in message.RepositoryPaths)
-			    {
-				    var dirName = repositoryPath.Split('\\').Last();
-				    var repoActor = Context.ActorOf(Props.Create(() => new RepositoryActor(repositoryPath, null)), dirName);
-					repoActor.Tell(new Go());
-			    }
-		    });
-	    }
 	}
 }

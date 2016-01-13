@@ -12,6 +12,11 @@ namespace ShamefulOldGit
 
 		public const string BranchInfoAggregationActorName = "BranchInfoAggregationActor";
 		public const string BranchInfoAggregationActorPath = Template + BranchInfoAggregationActorName;
-		
+
+		public const string PrinterActorName = "PrinterActor";
+		public const string PrinterActorPath = Template + PrinterActorName;
+
+		public const string EmailingActorName = "EmailingActor";
+		public const string EmailingActorPath = Template + EmailingActorName;
 	}
 }
