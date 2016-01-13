@@ -35,7 +35,7 @@ namespace ShamefulOldGit.Actors
 
 				if (oldNoMergedBranches.Count == 0)
 				{
-					Sender.Tell(new NoOldNoMergedBranchesInRepository());
+					Sender.Tell(new NoOldNoMergedBranchesInRepository(dirPath));
 				}
 
 				_oldNoMergedBranchNames = oldNoMergedBranches.Select(b => b.Name).ToList();
@@ -92,6 +92,12 @@ namespace ShamefulOldGit.Actors
 
 		public class NoOldNoMergedBranchesInRepository
 		{
+			public string DirPath { get; set; }
+
+			public NoOldNoMergedBranchesInRepository(string dirPath)
+			{
+				DirPath = dirPath;
+			}
 		}
 	}
 }

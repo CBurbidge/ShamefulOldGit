@@ -26,6 +26,12 @@ namespace ShamefulOldGit.Actors
 				}
 			});
 
+			Receive<RepositoryActor.NoOldNoMergedBranchesInRepository>(message =>
+			{
+				Console.WriteLine($"No appropriate branches in repo {message.DirPath}");
+				_allRepositories.Remove(message.DirPath);
+			});
+
 			Receive<RepositoryActor.RepositoryAllAccountedFor>(message =>
 			{
 				_allRepositories.Remove(message.DirPath);

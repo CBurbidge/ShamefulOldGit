@@ -22,8 +22,16 @@ namespace ShamefulOldGit.Actors
 
 			Receive<RepositoriesCoordinatorActor.AllRepositoriesAccountedFor>(message =>
 			{
-				Context.ActorSelection(ActorSelectionRouting.PrinterActorPath)
-					.Tell(new BranchInfosToPrint(_reposAndBranchInfos));
+				if (_reposAndBranchInfos.Count > 0)
+				{
+					Context.ActorSelection(ActorSelectionRouting.PrinterActorPath)
+						.Tell(new BranchInfosToPrint(_reposAndBranchInfos));
+				}
+				else
+				{
+					Console.WriteLine("There are no branches to report.");
+					Context.System.Shutdown();
+				}
 			});
 
 		}
