@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Akka.Actor;
 
 namespace ShamefulOldGit.Actors
@@ -9,7 +10,14 @@ namespace ShamefulOldGit.Actors
 		{
 			Receive<PrinterActor.EmailContentToBeSent>(message =>
 			{
-				Console.WriteLine("Email going to be sent.");
+				var path = Path.GetFullPath("..\\..\\..\\Email.html");
+				File.WriteAllText(path, message.Content);
+				Console.WriteLine($"File saved to location {path}");
+				Console.WriteLine("Press any key to stop actor system.");
+				Console.ReadKey();
+
+				Context.System.Shutdown();
+				Console.ReadKey();
 			});
 		}
 	}

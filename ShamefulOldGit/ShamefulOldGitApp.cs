@@ -35,6 +35,8 @@ namespace ShamefulOldGit
 			repoCoord.Tell(new RepositoriesCoordinatorActor.RepositoriesToReportOn(args));
 
 			MyActorSystem.AwaitTermination();
+
+			Console.ReadKey();
 		}
 	}
 }
