@@ -8,10 +8,10 @@ namespace ShamefulOldGit.Actors
 {
 	public class RepositoryActor : ReceiveActor
 	{
+		public const int MonthsPriorToNow = 0;
+		public const string ComparisonBranchName = "origin/develop";
 		private readonly string _dirPath;
 		private readonly Func<DateTime> _getDateTimeNow;
-		private const int MonthsPriorToNow = 0;
-		private const string ComparisonBranchName = "origin/develop";
 		private readonly Repository _repository;
 		private List<string> _oldNoMergedBranchNames;
 
@@ -28,10 +28,10 @@ namespace ShamefulOldGit.Actors
 				var comparisonBranch = _repository.Branches[ComparisonBranchName];
 
 				var oldNoMergedBranches = _repository.Branches.Where(b => b.Commits.Any()
-				                                                  && b.IsRemote
-				                                                  && BranchIsOld(b)
-				                                                  && BranchIsNoMerged(comparisonBranch, b))
-																  .ToList();
+				                                                          && b.IsRemote
+				                                                          && BranchIsOld(b)
+				                                                          && BranchIsNoMerged(comparisonBranch, b))
+					.ToList();
 
 				if (oldNoMergedBranches.Count == 0)
 				{
@@ -62,16 +62,6 @@ namespace ShamefulOldGit.Actors
 			});
 		}
 
-		public class RepositoryAllAccountedFor
-		{
-			public string DirPath { get; set; }
-
-			public RepositoryAllAccountedFor(string dirPath)
-			{
-				DirPath = dirPath;
-			}
-		}
-
 		private bool BranchIsOld(Branch branch)
 		{
 			return branch.Commits.Last().Committer.When < _getDateTimeNow().AddMonths(-1*MonthsPriorToNow);
@@ -88,6 +78,16 @@ namespace ShamefulOldGit.Actors
 			_repository.Dispose();
 
 			base.PostStop();
+		}
+
+		public class RepositoryAllAccountedFor
+		{
+			public RepositoryAllAccountedFor(string dirPath)
+			{
+				DirPath = dirPath;
+			}
+
+			public string DirPath { get; set; }
 		}
 
 		public class NoOldNoMergedBranchesInRepository

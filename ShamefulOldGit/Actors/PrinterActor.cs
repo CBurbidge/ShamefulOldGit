@@ -48,11 +48,12 @@ namespace ShamefulOldGit.Actors
 		public string Build(List<RepoAndBranchInfo> reposAndBranchInfos)
 		{
 			var sb = new StringBuilder();
-
+			sb.Append($"<p>Here are details of branchs that have not been merged into the branch '{RepositoryActor.ComparisonBranchName}' and are older than {RepositoryActor.MonthsPriorToNow} months.</p>");
 			var groupedByRepo = reposAndBranchInfos.GroupBy(r => r.DirPath);
 			foreach (var repoAndBranchInfos in groupedByRepo)
 			{
-				var repoName = repoAndBranchInfos.Key;
+				var repoPath = repoAndBranchInfos.Key;
+				var repoName = repoPath.Split('\\').Last();
 				var repoPrinted = BuildForRepo(repoName, repoAndBranchInfos);
 				sb.Append(repoPrinted);
 			}
