@@ -65,6 +65,14 @@ namespace ShamefulOldGit.Actors
 		private string BuildForRepo(string repoName, IGrouping<string, RepoAndBranchInfo> repoAndBranchInfos)
 		{
 			var sb = new StringBuilder();
+			sb.Append(
+					tr(
+						td("Branch name") +
+						td("Committer's email address.") +
+						td("Commit message") +
+						td("Commit SHA start")
+						)
+					);
 			foreach (var repoAndBranchInfo in repoAndBranchInfos)
 			{
 				var branchInfo = repoAndBranchInfo.BranchInfo;

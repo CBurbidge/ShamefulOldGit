@@ -1,27 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Akka.Actor;
+﻿using Akka.Actor;
 using ShamefulOldGit.Actors;
+using Topshelf;
 
 namespace ShamefulOldGit
 {
-    public class ShamefulOldGitApp
-    {
-	    private readonly ActorSystem MyActorSystem;
+	public class ShamefulOldGitApp : ServiceControl
+	{
+		private readonly string[] _repositoryPaths =
+		{
+			"F:\\Repos\\ShamefulOldGit"
+		};
+
+		private readonly ActorSystem MyActorSystem;
 
 		public ShamefulOldGitApp()
-	    {
+		{
 			MyActorSystem = ActorSystem.Create(ActorSelectionRouting.ActorSystemName);
 		}
 
-		public void Run(string[] args)
+		public bool Start(HostControl hostControl)
 		{
-			var printerActor = MyActorSystem.ActorOf(Props.Create<PrinterActor>(), ActorSelectionRouting.PrinterActorName);
+			var shutdownActor = MyActorSystem.ActorOf(
+				Props.Create<ShutDownActor>(), 
+				ActorSelectionRouting.ShutdownActorName);
 
-			var emailingActor = MyActorSystem.ActorOf(Props.Create<EmailingActor>(), ActorSelectionRouting.EmailingActorName);
+			var printerActor = MyActorSystem.ActorOf(
+				Props.Create<PrinterActor>(), 
+				ActorSelectionRouting.PrinterActorName);
 
 			var branchInfoAggregationActor = MyActorSystem.ActorOf(
 				Props.Create<BranchInfoAggregationActor>(),
@@ -29,14 +34,28 @@ namespace ShamefulOldGit
 
 			var repoCoord = MyActorSystem.ActorOf(
 				Props.Create(
-					() => new RepositoriesCoordinatorActor()), 
-					ActorSelectionRouting.RepositoriesCoordinatorActorName);
+					() => new RepositoriesCoordinatorActor()),
+				ActorSelectionRouting.RepositoriesCoordinatorActorName);
 
-			repoCoord.Tell(new RepositoriesCoordinatorActor.RepositoriesToReportOn(args));
+			var lastEmailedFileActor = MyActorSystem.ActorOf(
+				Props.Create(
+					() => new LastEmailedFileActor(_repositoryPaths)),
+					"LastEmailedFileActor");
 
-			MyActorSystem.AwaitTermination();
+			var emailingActor = MyActorSystem.ActorOf(
+				Props.Create(
+					() => new EmailingActor(lastEmailedFileActor)),
+				ActorSelectionRouting.EmailingActorName);
 
-			Console.ReadKey();
+			lastEmailedFileActor.Tell(new Go());
+			
+			return true;
+		}
+
+		public bool Stop(HostControl hostControl)
+		{
+			MyActorSystem.Shutdown();
+			return true;
 		}
 	}
 }

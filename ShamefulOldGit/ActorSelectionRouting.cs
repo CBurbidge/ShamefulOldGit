@@ -18,5 +18,8 @@ namespace ShamefulOldGit
 
 		public const string EmailingActorName = "EmailingActor";
 		public const string EmailingActorPath = Template + EmailingActorName;
+
+		public const string ShutdownActorName = "ShutdownActor";
+		public const string ShutdownActorPath = Template + ShutdownActorName;
 	}
 }

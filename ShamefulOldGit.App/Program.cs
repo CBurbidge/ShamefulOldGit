@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Topshelf;
 
 namespace ShamefulOldGit.App
 {
@@ -10,11 +11,21 @@ namespace ShamefulOldGit.App
 	{
 		static void Main(string[] args)
 		{
-			var app = new ShamefulOldGitApp();
-			app.Run(new string[]
+			HostFactory.Run(x =>
 			{
-				"F:\\Repos\\ShamefulOldGit"
+				x.Service(s => new ShamefulOldGitApp());
+
+				x.RunAsLocalSystem();
+
+				x.RunAsLocalService();
+
+				x.StartAutomatically();
+
+				x.SetServiceName("ShamefulOldGit");
+				x.SetDisplayName("ShamefulOldGit");
+				x.SetDescription("Shaming old git commits.");
 			});
+			
 		}
 	}
 }

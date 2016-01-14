@@ -11,8 +11,6 @@ namespace ShamefulOldGit.Actors
 
 		public RepositoriesCoordinatorActor()
 		{
-			Console.WriteLine("Initiated Repo coordinator.");
-
 			Receive<RepositoriesToReportOn>(message =>
 			{
 				_allRepositories = message.RepositoryPaths.ToList();

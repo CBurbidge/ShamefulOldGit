@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Akka.Actor;
-using LibGit2Sharp;
 
 namespace ShamefulOldGit.Actors
 {
@@ -29,8 +28,8 @@ namespace ShamefulOldGit.Actors
 				}
 				else
 				{
-					Console.WriteLine("There are no branches to report.");
-					Context.System.Shutdown();
+					Console.WriteLine("There are no branches to report, shutting down.");
+					Context.ActorSelection(ActorSelectionRouting.ShutdownActorPath).Tell(new ShutItDown());
 				}
 			});
 
