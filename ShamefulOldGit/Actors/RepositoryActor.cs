@@ -8,7 +8,7 @@ namespace ShamefulOldGit.Actors
 {
 	public class RepositoryActor : ReceiveActor
 	{
-		public const int MonthsPriorToNow = 0;
+		public const int MonthsPriorToNow = 3;
 		public const string ComparisonBranchName = "origin/develop";
 		private readonly string _dirPath;
 		private readonly Func<DateTime> _getDateTimeNow;
@@ -26,11 +26,12 @@ namespace ShamefulOldGit.Actors
 				Console.WriteLine($"Starting repo actor {dirPath}");
 
 				var comparisonBranch = _repository.Branches[ComparisonBranchName];
+				var comparisonBranchCommitShas = comparisonBranch.Commits.Select(c => c.Sha).ToList();
 
 				var oldNoMergedBranches = _repository.Branches.Where(b => b.Commits.Any()
 				                                                          && b.IsRemote
 				                                                          && BranchIsOld(b)
-				                                                          && BranchIsNoMerged(comparisonBranch, b))
+				                                                          && BranchIsNoMerged(comparisonBranchCommitShas, b))
 					.ToList();
 
 				if (oldNoMergedBranches.Count == 0)
@@ -64,12 +65,14 @@ namespace ShamefulOldGit.Actors
 
 		private bool BranchIsOld(Branch branch)
 		{
-			return branch.Commits.Last().Committer.When < _getDateTimeNow().AddMonths(-1*MonthsPriorToNow);
+			var timeLimit = _getDateTimeNow().AddMonths(-1*MonthsPriorToNow);
+			var branchIsOld = branch.Tip.Committer.When < timeLimit;
+			return branchIsOld;
 		}
 
-		private static bool BranchIsNoMerged(Branch comparisonBranch, Branch branchToCompare)
+		private static bool BranchIsNoMerged(List<string> comparisonBranch, Branch branchToCompare)
 		{
-			return comparisonBranch.Commits.Contains(branchToCompare.Tip) == false;
+			return comparisonBranch.Contains(branchToCompare.Tip.Sha) == false;
 		}
 
 		protected override void PostStop()

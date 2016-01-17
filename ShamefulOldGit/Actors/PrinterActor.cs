@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Akka.Actor;
+using Humanizer;
 
 namespace ShamefulOldGit.Actors
 {
@@ -37,13 +38,46 @@ namespace ShamefulOldGit.Actors
 	{
 		private const int NumberOfCharsOfShaToDisplay = 6;
 		private readonly Func<string, string> h3 = str => $"<h3>{str}</h3>\n";
+		private const string _styling = @"<style>
+table {
+    font-family: ""Trebuchet MS"", Arial, Helvetica, sans-serif;
+	table-layout: fixed;
+	border-collapse: collapse;
+    width: 100%;
+}
 
+table td, table th {
+    border: 1px solid #ddd;
+    text-align: left;
+    padding: 8px;
+    min-width: 150px;
+    max-width: 350px;
+}
+
+table tr:nth-child(even)
+{
+	background-color: #f2f2f2;
+}
+
+table tr:hover {
+	background-color: #ddd;
+}
+
+table th {
+	padding-top: 12px;
+	padding-bottom: 12px;
+	background-color: #4CAF50;
+	color: white;
+}
+</style>
+";
 		private readonly Func<string, string> htmlMain =
-			body => $"<!DOCTYPE html>\n<html>\n<head>\n<title>Git shame</title>\n</head>\n<body>\n{body}\n</body>\n</html>";
+			body => $"<!DOCTYPE html>\n<html>\n<head>\n<title>Git shame</title>\n{_styling}\n</head>\n<body>\n{body}\n</body>\n</html>";
 
 		private readonly Func<string, string> table = str => $"<table>\n{str}\n</table>";
 		private readonly Func<string, string> td = str => $"<td>{str}</td>";
 		private readonly Func<string, string> tr = str => $"<tr>{str}</tr>\n";
+		private readonly Func<string, string> th = str => $"<th>{str}</th>\n";
 
 		public string Build(List<RepoAndBranchInfo> reposAndBranchInfos)
 		{
@@ -67,17 +101,20 @@ namespace ShamefulOldGit.Actors
 			var sb = new StringBuilder();
 			sb.Append(
 					tr(
-						td("Branch name") +
-						td("Committer's email address.") +
-						td("Commit message") +
-						td("Commit SHA start")
+						th("Age") +
+						th("Branch name") +
+						th("Committer's email address.") +
+						th("Commit message") +
+						th("Commit SHA start")
 						)
 					);
-			foreach (var repoAndBranchInfo in repoAndBranchInfos)
+			var orderedByDateDesc = repoAndBranchInfos.OrderBy(b => b.BranchInfo.CommitterDate.Date);
+			foreach (var repoAndBranchInfo in orderedByDateDesc)
 			{
 				var branchInfo = repoAndBranchInfo.BranchInfo;
 				sb.Append(
 					tr(
+						td(branchInfo.CommitterDate.Humanize()) +
 						td(branchInfo.Name) +
 						td(branchInfo.CommitterEmail) +
 						td(branchInfo.Message) +

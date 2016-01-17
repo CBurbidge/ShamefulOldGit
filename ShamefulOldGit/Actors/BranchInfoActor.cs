@@ -16,6 +16,7 @@ namespace ShamefulOldGit.Actors
 				var branchInfo = new BranchInfo
 				{
 					Name = message.Branch.Name,
+					CommitterDate = branchLastCommit.Committer.When,
 					CommitterName = branchLastCommit.Committer.Name,
 					CommitterEmail = branchLastCommit.Committer.Email,
 					Message = branchLastCommit.Message,

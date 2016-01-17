@@ -18,6 +18,9 @@ namespace ShamefulOldGit.Actors
 			_lastEmailedFileActor = lastEmailedFileActor;
 			Receive<PrinterActor.EmailContentToBeSent>(message =>
 			{
+#if DEBUG
+				File.WriteAllText(GetPath("Email.html"), message.Content);
+#else
 				var mail = new MailMessage();
 				var client = new SmtpClient();
 				var username = File.ReadAllText(GetPath("Username.txt"));
@@ -30,7 +33,7 @@ namespace ShamefulOldGit.Actors
 				mail.Subject = EmailSubject;
 				mail.Body = message.Content;
 				client.Send(mail);
-
+#endif
 				_lastEmailedFileActor.Tell(new EmailedAtTime(DateTime.Now));
 			});
 		}

@@ -8,7 +8,7 @@ namespace ShamefulOldGit
 	{
 		private readonly string[] _repositoryPaths =
 		{
-			"F:\\Repos\\ShamefulOldGit"
+			@"C:\Dev\Abide\Abide.Digby"
 		};
 
 		private readonly ActorSystem MyActorSystem;

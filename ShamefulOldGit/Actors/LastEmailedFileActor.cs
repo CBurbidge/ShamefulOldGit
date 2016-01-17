@@ -15,6 +15,9 @@ namespace ShamefulOldGit.Actors
 			_repositoryPaths = repositoryPaths;
 			Receive<Go>(message =>
 			{
+#if DEBUG
+				if(File.Exists(FileName))File.Delete(FileName);
+#endif
 				if (File.Exists(FileName) == false)
 				{
 					TellToStart();
