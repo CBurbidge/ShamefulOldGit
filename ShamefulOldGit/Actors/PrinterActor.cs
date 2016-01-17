@@ -96,6 +96,8 @@ table th {
 			return allHtml;
 		}
 
+		private const int BranchNameLength = 50;
+		private const int MessageLength = 50;
 		private string BuildForRepo(string repoName, IGrouping<string, RepoAndBranchInfo> repoAndBranchInfos)
 		{
 			var sb = new StringBuilder();
@@ -112,12 +114,14 @@ table th {
 			foreach (var repoAndBranchInfo in orderedByDateDesc)
 			{
 				var branchInfo = repoAndBranchInfo.BranchInfo;
+				var branchName = branchInfo.Name.Length > BranchNameLength ? branchInfo.Name.Substring(0, BranchNameLength) : branchInfo.Name;
+				var commitMessage = branchInfo.Message.Length > MessageLength ? branchInfo.Message.Substring(0, MessageLength) : branchInfo.Message;
 				sb.Append(
 					tr(
 						td(branchInfo.CommitterDate.Humanize()) +
-						td(branchInfo.Name) +
+						td(branchName) +
 						td(branchInfo.CommitterEmail) +
-						td(branchInfo.Message) +
+						td(commitMessage) +
 						td(branchInfo.Sha.Substring(0, NumberOfCharsOfShaToDisplay))
 						)
 					);
