@@ -25,13 +25,17 @@ namespace ShamefulOldGit.Actors
 				var client = new SmtpClient();
 				var username = File.ReadAllText(GetPath("Username.txt"));
 				var password = File.ReadAllText(GetPath("Password.txt"));
-				client.Credentials = new NetworkCredential(username, password);
-				client.Port = 25;
-				client.Host = File.ReadAllText(GetPath("Host.txt"));
+				client.Port = 587;
+				var host = File.ReadAllText(GetPath("Host.txt"));
+				client.Host = host;
 				mail.To.Add(new MailAddress(EmailToAddress));
 				mail.From = new MailAddress(EmailFromAddress);
 				mail.Subject = EmailSubject;
 				mail.Body = message.Content;
+				mail.IsBodyHtml = true;
+				client.EnableSsl = true;
+				client.UseDefaultCredentials = false;
+				client.Credentials = new NetworkCredential(username, password);
 				client.Send(mail);
 #endif
 				_lastEmailedFileActor.Tell(new EmailedAtTime(DateTime.Now));
