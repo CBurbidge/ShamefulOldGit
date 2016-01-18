@@ -9,8 +9,6 @@ namespace ShamefulOldGit.Actors
 	public class EmailingActor : ReceiveActor
 	{
 		private const string EmailSubject = "Old un merged branches";
-		private const string EmailToAddress = "chester.burbidge@abide-financial.com";
-		private const string EmailFromAddress = "chester.burbidge@abide-financial.com";
 		private readonly IActorRef _lastEmailedFileActor;
 
 		public EmailingActor(IActorRef lastEmailedFileActor)
@@ -18,28 +16,57 @@ namespace ShamefulOldGit.Actors
 			_lastEmailedFileActor = lastEmailedFileActor;
 			Receive<PrinterActor.EmailContentToBeSent>(message =>
 			{
+				
 #if DEBUG
 				File.WriteAllText(GetPath("Email.html"), message.Content);
 #else
+				var details = GetEmailDetails();
 				var mail = new MailMessage();
 				var client = new SmtpClient();
-				var username = File.ReadAllText(GetPath("Username.txt"));
-				var password = File.ReadAllText(GetPath("Password.txt"));
 				client.Port = 587;
-				var host = File.ReadAllText(GetPath("Host.txt"));
-				client.Host = host;
-				mail.To.Add(new MailAddress(EmailToAddress));
-				mail.From = new MailAddress(EmailFromAddress);
+				client.Host = details.Host;
+				mail.To.Add(new MailAddress(details.To));
+				mail.From = new MailAddress(details.From);
 				mail.Subject = EmailSubject;
 				mail.Body = message.Content;
 				mail.IsBodyHtml = true;
 				client.EnableSsl = true;
 				client.UseDefaultCredentials = false;
-				client.Credentials = new NetworkCredential(username, password);
+				client.Credentials = new NetworkCredential(details.Username, details.Password);
 				client.Send(mail);
 #endif
 				_lastEmailedFileActor.Tell(new EmailedAtTime(DateTime.Now));
 			});
+		}
+
+		private EmailDetails GetEmailDetails()
+		{
+			var emailDetailsFile = File.ReadAllText(GetPath("EmailDetails.txt"));
+			var lines = emailDetailsFile.Split(new[] {'\n', '\r'}, StringSplitOptions.RemoveEmptyEntries);
+
+			var toLine = CheckStartOfString(lines[0], "to:");
+			var fromLine = CheckStartOfString(lines[1], "from:");
+			var hostLine = CheckStartOfString(lines[2], "host:");
+			var usernameLine = CheckStartOfString(lines[3], "username:");
+			var passwordLine = CheckStartOfString(lines[4], "password:");
+
+			return new EmailDetails
+			{
+				To = toLine,
+				From = fromLine,
+				Username = usernameLine,
+				Host = hostLine,
+				Password = passwordLine
+			};
+		}
+
+		private static string CheckStartOfString(string line, string start)
+		{
+			if (line.StartsWith(start) == false)
+			{
+				throw new InvalidProgramException($"Needs to start with '{start}'");
+			}
+			return line.Replace(start, "");
 		}
 
 		private string GetPath(string path)
@@ -55,5 +82,14 @@ namespace ShamefulOldGit.Actors
 
 			public DateTime Now { get; set; }
 		}
+	}
+
+	public class EmailDetails
+	{
+		public string To { get; set; }
+		public string From { get; set; }
+		public string Host { get; set; }
+		public string Username { get; set; }
+		public string Password { get; set; }
 	}
 }
