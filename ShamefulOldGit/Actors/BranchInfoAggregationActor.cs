@@ -25,8 +25,8 @@ namespace ShamefulOldGit.Actors
 						.Tell(new BranchInfosToPrint(_reposAndBranchInfos));
 
 					// this might be overkill
-					Context.ActorSelection(ActorSelectionRouting.MassEmailingActorPath)
-						.Tell(new BranchInfosToPrint(_reposAndBranchInfos));
+					//Context.ActorSelection(ActorSelectionRouting.MassEmailingActorPath)
+					//	.Tell(new BranchInfosToPrint(_reposAndBranchInfos));
 				}
 				else
 				{
