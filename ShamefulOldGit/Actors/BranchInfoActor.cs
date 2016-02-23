@@ -10,49 +10,51 @@ namespace ShamefulOldGit.Actors
 		{
 			Receive<GetBranchInfo>(message =>
 			{
-				Console.WriteLine($"Starting Branch info {message.DirPath} -> {message.Branch.Name}");
-
-				var branchLastCommit = message.Branch.Tip;
-				var branchInfo = new BranchInfo
+				Logger.WriteLine($"Starting Branch info {message.DirPath} -> {message.BranchName}");
+				using (var repository = new Repository(message.RepositoryPath))
 				{
-					Name = message.Branch.Name,
-					CommitterDate = branchLastCommit.Committer.When,
-					CommitterName = branchLastCommit.Committer.Name,
-					CommitterEmail = branchLastCommit.Committer.Email,
-					Message = branchLastCommit.Message,
-					Sha = branchLastCommit.Sha,
-				};
+					var branch = repository.Branches[message.BranchName];
+					var branchLastCommit = branch.Tip;
+					var branchInfo = new BranchInfo
+					{
+						Name = branch.Name,
+						CommitterDate = branchLastCommit.Committer.When,
+						CommitterName = branchLastCommit.Committer.Name,
+						CommitterEmail = branchLastCommit.Committer.Email,
+						Message = branchLastCommit.Message,
+						Sha = branchLastCommit.Sha,
+					};
 
-				var repoAndBranchInfo = new RepoAndBranchInfo(message.DirPath, branchInfo);
+					var repoAndBranchInfo = new RepoAndBranchInfo(message.DirPath, branchInfo);
 
-				Context.ActorSelection(ActorSelectionRouting.BranchInfoAggregationActorPath)
-					.Tell(new RepositoryAndBranchInfo(repoAndBranchInfo, Sender));
+					Context.ActorSelection(ActorSelectionRouting.BranchInfoAggregationActorPath)
+						.Tell(new RepositoryAndBranchInfo(repoAndBranchInfo));
+
+				}
 			});
 		}
 
 		public class GetBranchInfo
 		{
-			public GetBranchInfo(string dirPath, Repository repository, Branch branch)
+			public GetBranchInfo(string dirPath, string repositoryPath, string branchName)
 			{
 				DirPath = dirPath;
-				Repository = repository;
-				Branch = branch;
+				RepositoryPath = repositoryPath;
+				BranchName = branchName;
 			}
 
 			public string DirPath { get; set; }
-			public Repository Repository { get; private set; }
-			public Branch Branch { get; private set; }
+			public string RepositoryPath { get; private set; }
+			public string BranchName { get; private set; }
 		}
 
 		public class RepositoryAndBranchInfo
 		{
 			public RepoAndBranchInfo RepoAndBranchInfo { get; }
-			public IActorRef RepositoryActorRef { get; }
 
-			public RepositoryAndBranchInfo(RepoAndBranchInfo repoAndBranchInfo, IActorRef repositoryActorRef)
+			public RepositoryAndBranchInfo(RepoAndBranchInfo repoAndBranchInfo)
 			{
 				RepoAndBranchInfo = repoAndBranchInfo;
-				RepositoryActorRef = repositoryActorRef;
 			}
 		}
 	}

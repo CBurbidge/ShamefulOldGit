@@ -66,14 +66,15 @@
     <Compile Include="ActorSelectionRouting.cs" />
     <Compile Include="Actors\BranchInfoAggregationActor.cs" />
     <Compile Include="Actors\BranchInfoActor.cs" />
+    <Compile Include="Actors\MassEmailingActor.cs" />
     <Compile Include="Actors\LastEmailedFileActor.cs" />
-    <Compile Include="Actors\ShutdownActor.cs" />
+    <Compile Include="Actors\Logger.cs" />
     <Compile Include="Actors\EmailingActor.cs" />
     <Compile Include="Actors\PrinterActor.cs" />
     <Compile Include="Actors\RepositoriesCoordinatorActor.cs" />
     <Compile Include="Actors\RepositoryActor.cs" />
     <Compile Include="BranchInfo.cs" />
-    <Compile Include="Go.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="RepoAndBranchInfo.cs" />
     <Compile Include="ShamefulOldGitApp.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

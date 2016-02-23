@@ -8,64 +8,50 @@ namespace ShamefulOldGit.Actors
 {
 	public class RepositoryActor : ReceiveActor
 	{
-		public const int MonthsPriorToNow = 3;
-		public const string ComparisonBranchName = "origin/develop";
-		private readonly string _dirPath;
+		private readonly IActorRef _gitBranchActor;
 		private readonly Func<DateTime> _getDateTimeNow;
-		private readonly Repository _repository;
 		private List<string> _oldNoMergedBranchNames;
 
-		public RepositoryActor(string dirPath, Func<DateTime> getDateTimeNow)
+		public RepositoryActor(IActorRef gitBranchActor, Func<DateTime> getDateTimeNow)
 		{
-			_dirPath = dirPath;
+			_gitBranchActor = gitBranchActor;
 			_getDateTimeNow = getDateTimeNow ?? (() => DateTime.Now);
-			_repository = new Repository(dirPath);
 
-			Receive<Go>(message =>
+			Receive<StartRepository>(message =>
 			{
-				Console.WriteLine($"Starting repo actor {dirPath}");
-
-				var comparisonBranch = _repository.Branches[ComparisonBranchName];
-				var comparisonBranchCommitShas = comparisonBranch.Commits.Select(c => c.Sha).ToList();
-
-				var oldNoMergedBranches = _repository.Branches.Where(b => b.Commits.Any()
-				                                                          && b.IsRemote
-				                                                          && BranchIsOld(b)
-				                                                          && BranchIsNoMerged(comparisonBranchCommitShas, b))
-					.ToList();
-
-				if (oldNoMergedBranches.Count == 0)
+				Logger.WriteLine($"Starting repo actor {message.RepositoryPath}");
+				using (var repository = new Repository(message.RepositoryPath))
 				{
-					Sender.Tell(new NoOldNoMergedBranchesInRepository(dirPath));
-				}
+					var comparisonBranch = repository.Branches[Constants.ComparisonBranchName];
+					var comparisonBranchCommitShas = comparisonBranch.Commits.Select(c => c.Sha).ToList();
 
-				_oldNoMergedBranchNames = oldNoMergedBranches.Select(b => b.Name).ToList();
+					var oldNoMergedBranches = repository.Branches.Where(b => b.Commits.Any()
+																			  && b.IsRemote
+																			  && BranchIsOld(b)
+																			  && BranchIsNoMerged(comparisonBranchCommitShas, b))
+						.ToList();
 
-				foreach (var branch in oldNoMergedBranches)
-				{
-					var branchNameSuitableForAnActor = branch.Name
-						.Replace(@"/", "");
-					var branchActor = Context.ActorOf(Props.Create<BranchInfoActor>(), branchNameSuitableForAnActor);
-					branchActor.Tell(new BranchInfoActor.GetBranchInfo(_dirPath, _repository, branch));
+					if (oldNoMergedBranches.Count == 0)
+					{
+						Sender.Tell(new NoOldNoMergedBranchesInRepository(message.RepositoryPath));
+					}
+
+					_oldNoMergedBranchNames = oldNoMergedBranches.Select(b => b.Name).ToList();
+
+					foreach (var branch in oldNoMergedBranches)
+					{
+						Sender.Tell(new RegisterBranch(message.RepositoryPath, branch.Name));
+						_gitBranchActor.Tell(new BranchInfoActor.GetBranchInfo(message.RepositoryPath, message.RepositoryPath, branch.Name));
+					}
 				}
 			});
 
-			Receive<BranchInfoAggregationActor.BranchInfoReportedToAggregator>(message =>
-			{
-				_oldNoMergedBranchNames.Remove(message.BranchName);
-
-				if (_oldNoMergedBranchNames.Count == 0)
-				{
-					Console.WriteLine($"There are no more branches to report for repo {_dirPath}");
-					Context.ActorSelection(ActorSelectionRouting.RepositoriesCoordinatorActorPath)
-						.Tell(new RepositoryAllAccountedFor(_dirPath));
-				}
-			});
+			
 		}
 
 		private bool BranchIsOld(Branch branch)
 		{
-			var timeLimit = _getDateTimeNow().AddMonths(-1*MonthsPriorToNow);
+			var timeLimit = _getDateTimeNow().AddMonths(-1 *Constants.MonthsPriorToNow);
 			var branchIsOld = branch.Tip.Committer.When < timeLimit;
 			return branchIsOld;
 		}
@@ -73,14 +59,6 @@ namespace ShamefulOldGit.Actors
 		private static bool BranchIsNoMerged(List<string> comparisonBranch, Branch branchToCompare)
 		{
 			return comparisonBranch.Contains(branchToCompare.Tip.Sha) == false;
-		}
-
-		protected override void PostStop()
-		{
-			// Repository is an IDisposable class for some reason.
-			_repository.Dispose();
-
-			base.PostStop();
 		}
 
 		public class RepositoryAllAccountedFor
@@ -101,6 +79,18 @@ namespace ShamefulOldGit.Actors
 			{
 				DirPath = dirPath;
 			}
+		}
+	}
+
+	public class RegisterBranch
+	{
+		public string RepositoryPath { get; set; }
+		public string BranchName { get; set; }
+
+		public RegisterBranch(string repositoryPath, string branchName)
+		{
+			RepositoryPath = repositoryPath;
+			BranchName = branchName;
 		}
 	}
 }

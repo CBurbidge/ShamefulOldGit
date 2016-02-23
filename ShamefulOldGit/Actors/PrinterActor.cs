@@ -13,7 +13,7 @@ namespace ShamefulOldGit.Actors
 		{
 			Receive<BranchInfoAggregationActor.BranchInfosToPrint>(message =>
 			{
-				Console.WriteLine("Printing out brancheInfos.");
+				Logger.WriteLine("Printing out brancheInfos.");
 				var emailBuilder = new EmailBuilder();
 
 				var emailContent = emailBuilder.Build(message.ReposAndBranchInfos);
@@ -36,7 +36,6 @@ namespace ShamefulOldGit.Actors
 
 	public class EmailBuilder
 	{
-		private const int NumberOfCharsOfShaToDisplay = 6;
 		private readonly Func<string, string> h3 = str => $"<h3>{str}</h3>\n";
 		private const string _styling = @"<style>
 table {
@@ -71,6 +70,7 @@ table th {
 }
 </style>
 ";
+
 		private readonly Func<string, string> htmlMain =
 			body => $"<!DOCTYPE html>\n<html>\n<head>\n<title>Git shame</title>\n{_styling}\n</head>\n<body>\n{body}\n</body>\n</html>";
 
@@ -82,7 +82,7 @@ table th {
 		public string Build(List<RepoAndBranchInfo> reposAndBranchInfos)
 		{
 			var sb = new StringBuilder();
-			sb.Append($"<p>Here are details of branchs that have not been merged into the branch '{RepositoryActor.ComparisonBranchName}' and are older than {RepositoryActor.MonthsPriorToNow} months.</p>");
+			sb.Append($"<p>Here are details of branchs that have not been merged into the branch '{Constants.ComparisonBranchName}' and are older than {Constants.MonthsPriorToNow} months.</p>");
 			var groupedByRepo = reposAndBranchInfos.GroupBy(r => r.DirPath);
 			foreach (var repoAndBranchInfos in groupedByRepo)
 			{
@@ -96,8 +96,6 @@ table th {
 			return allHtml;
 		}
 
-		private const int BranchNameLength = 50;
-		private const int MessageLength = 50;
 		private string BuildForRepo(string repoName, IGrouping<string, RepoAndBranchInfo> repoAndBranchInfos)
 		{
 			var sb = new StringBuilder();
@@ -114,15 +112,15 @@ table th {
 			foreach (var repoAndBranchInfo in orderedByDateDesc)
 			{
 				var branchInfo = repoAndBranchInfo.BranchInfo;
-				var branchName = branchInfo.Name.Length > BranchNameLength ? branchInfo.Name.Substring(0, BranchNameLength) : branchInfo.Name;
-				var commitMessage = branchInfo.Message.Length > MessageLength ? branchInfo.Message.Substring(0, MessageLength) : branchInfo.Message;
+				var branchName = branchInfo.Name.Length > Constants.EmailCommitBranchNameLength ? branchInfo.Name.Substring(0, Constants.EmailCommitBranchNameLength) : branchInfo.Name;
+				var commitMessage = branchInfo.Message.Length > Constants.EmailCommitMessageLength ? branchInfo.Message.Substring(0, Constants.EmailCommitMessageLength) : branchInfo.Message;
 				sb.Append(
 					tr(
 						td(branchInfo.CommitterDate.Humanize()) +
 						td(branchName) +
 						td(branchInfo.CommitterEmail) +
 						td(commitMessage) +
-						td(branchInfo.Sha.Substring(0, NumberOfCharsOfShaToDisplay))
+						td(branchInfo.Sha.Substring(0, Constants.EmailNumberOfCharsOfShaToDisplay))
 						)
 					);
 			}

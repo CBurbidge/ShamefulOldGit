@@ -12,11 +12,9 @@ namespace ShamefulOldGit.Actors
 		{
 			Receive<BranchInfoActor.RepositoryAndBranchInfo>(message =>
 			{
-				var branchName = message.RepoAndBranchInfo.BranchInfo.Name;
-				
 				_reposAndBranchInfos.Add(message.RepoAndBranchInfo);
-
-				message.RepositoryActorRef.Tell(new BranchInfoReportedToAggregator(branchName));
+				Context.ActorSelection(ActorSelectionRouting.RepositoriesCoordinatorActorPath)
+					.Tell(new BranchInfoReportedToAggregator(message.RepoAndBranchInfo));
 			});
 
 			Receive<RepositoriesCoordinatorActor.AllRepositoriesAccountedFor>(message =>
@@ -25,11 +23,14 @@ namespace ShamefulOldGit.Actors
 				{
 					Context.ActorSelection(ActorSelectionRouting.PrinterActorPath)
 						.Tell(new BranchInfosToPrint(_reposAndBranchInfos));
+
+					// this might be overkill
+					Context.ActorSelection(ActorSelectionRouting.MassEmailingActorPath)
+						.Tell(new BranchInfosToPrint(_reposAndBranchInfos));
 				}
 				else
 				{
-					Console.WriteLine("There are no branches to report, shutting down.");
-					Context.ActorSelection(ActorSelectionRouting.ShutdownActorPath).Tell(new ShutItDown());
+					Logger.WriteLine("There are no branches to report, shutting down.");
 				}
 			});
 
@@ -47,11 +48,11 @@ namespace ShamefulOldGit.Actors
 
 		public class BranchInfoReportedToAggregator
 		{
-			public string BranchName { get; private set; }
+			public RepoAndBranchInfo RepoAndBranchInfo { get; private set; }
 			
-			public BranchInfoReportedToAggregator(string branchName)
+			public BranchInfoReportedToAggregator(RepoAndBranchInfo branchName)
 			{
-				BranchName = branchName;
+				RepoAndBranchInfo = branchName;
 			}
 		}
 	}

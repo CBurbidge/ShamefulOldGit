@@ -7,16 +7,25 @@ namespace ShamefulOldGit.Actors
 	public class LastEmailedFileActor : ReceiveActor
 	{
 		private readonly string[] _repositoryPaths;
+		private readonly string LastChecked = "LastChecked.txt";
 		private readonly string FileName = "LastEmailed.txt";
-		const int HowManyDaysToWaitBeforeEmailAgain = 7;
+		
 
 		public LastEmailedFileActor(string[] repositoryPaths)
 		{
 			_repositoryPaths = repositoryPaths;
-			Receive<Go>(message =>
+
+			SetReceiveTimeout(TimeSpan.Zero);
+
+			Receive<ReceiveTimeout>(message =>
 			{
+				Logger.SaveToFile(Path.GetFullPath($"..\\..\\..\\Log.log"));
+				SetReceiveTimeout(TimeSpan.FromSeconds(Constants.SetTimeoutNumberOfSeconds));
+				Logger.WriteLine("Starting :-)");
+				File.WriteAllText(LastChecked, DateTime.Now.ToString("O"));
+
 #if DEBUG
-				if(File.Exists(FileName))File.Delete(FileName);
+				if (File.Exists(FileName)) File.Delete(FileName);
 #endif
 				if (File.Exists(FileName) == false)
 				{
@@ -28,25 +37,26 @@ namespace ShamefulOldGit.Actors
 				DateTime lastEmailedDate;
 				if (DateTime.TryParse(lastEmailed, out lastEmailedDate))
 				{
-					if (lastEmailedDate < DateTime.Now.AddDays(-1 * HowManyDaysToWaitBeforeEmailAgain))
+					if (lastEmailedDate < DateTime.Now.AddDays(-1 *Constants.HowManyDaysToWaitBeforeEmailAgain))
 					{
 						TellToStart();
 					}
 					else
 					{
-						Console.WriteLine($"Was last run less than 7 days ago at {lastEmailed}");
+						Logger.WriteLine($"Was last run less than 7 days ago at {lastEmailed}");
 					}
 				}
 				else
 				{
 					TellToStart();
 				}
+
 			});
 
 			Receive<EmailingActor.EmailedAtTime>(message =>
 			{
 				File.WriteAllText(FileName, message.Now.ToString("O"));
-				Console.WriteLine($"Email last write time file saved to {Path.GetFullPath(FileName)}");
+				Logger.WriteLine($"Email last write time file saved to {Path.GetFullPath(FileName)}");
 			});
 		}
 

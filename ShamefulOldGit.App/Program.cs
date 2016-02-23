@@ -11,6 +11,11 @@ namespace ShamefulOldGit.App
 	{
 		static void Main(string[] args)
 		{
+#if DEBUG
+			var app = new ShamefulOldGitApp();
+			app.Start(null);
+			Console.ReadKey();
+#else
 			HostFactory.Run(x =>
 			{
 				x.Service(s => new ShamefulOldGitApp());
@@ -25,7 +30,8 @@ namespace ShamefulOldGit.App
 				x.SetDisplayName("ShamefulOldGit");
 				x.SetDescription("Shaming old git commits.");
 			});
-			
+
+#endif       
 		}
 	}
 }

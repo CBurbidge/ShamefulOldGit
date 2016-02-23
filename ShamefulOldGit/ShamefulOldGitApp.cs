@@ -8,7 +8,8 @@ namespace ShamefulOldGit
 	{
 		private readonly string[] _repositoryPaths =
 		{
-			@"C:\Dev\Abide\Abide.Digby"
+			@"C:\Dev\Abide\Abide.Digby",
+			@"C:\Dev\Abide\Abide.Gaspode",
 		};
 
 		private readonly ActorSystem MyActorSystem;
@@ -20,10 +21,6 @@ namespace ShamefulOldGit
 
 		public bool Start(HostControl hostControl)
 		{
-			var shutdownActor = MyActorSystem.ActorOf(
-				Props.Create<ShutDownActor>(), 
-				ActorSelectionRouting.ShutdownActorName);
-
 			var printerActor = MyActorSystem.ActorOf(
 				Props.Create<PrinterActor>(), 
 				ActorSelectionRouting.PrinterActorName);
@@ -32,9 +29,17 @@ namespace ShamefulOldGit
 				Props.Create<BranchInfoAggregationActor>(),
 				ActorSelectionRouting.BranchInfoAggregationActorName);
 
+			var branchActor = MyActorSystem.ActorOf(
+				Props.Create<BranchInfoActor>(), 
+				ActorSelectionRouting.BranchActorName);
+
+			var repositoryActor = MyActorSystem.ActorOf(
+				Props.Create(() => new RepositoryActor(branchActor, null)),
+				ActorSelectionRouting.RepositoryActorName);
+			
 			var repoCoord = MyActorSystem.ActorOf(
 				Props.Create(
-					() => new RepositoriesCoordinatorActor()),
+					() => new RepositoriesCoordinatorActor(repositoryActor)),
 				ActorSelectionRouting.RepositoriesCoordinatorActorName);
 
 			var lastEmailedFileActor = MyActorSystem.ActorOf(
@@ -46,8 +51,6 @@ namespace ShamefulOldGit
 				Props.Create(
 					() => new EmailingActor(lastEmailedFileActor)),
 				ActorSelectionRouting.EmailingActorName);
-
-			lastEmailedFileActor.Tell(new Go());
 			
 			return true;
 		}
