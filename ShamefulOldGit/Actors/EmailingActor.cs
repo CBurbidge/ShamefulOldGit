@@ -1,4 +1,5 @@
 using System;
+using System.CodeDom;
 using System.IO;
 using System.Net;
 using System.Net.Mail;
@@ -18,9 +19,9 @@ namespace ShamefulOldGit.Actors
 			{
 				
 #if DEBUG
-				File.WriteAllText(GetPath("Email.html"), message.Content);
+				File.WriteAllText("..\\..\\Email.html", message.Content);
 #else
-				var details = GetEmailDetails();
+				var details = EmailDetails.Get();
 				var mail = new MailMessage();
 				var client = new SmtpClient();
 				client.Port = 587;
@@ -38,41 +39,7 @@ namespace ShamefulOldGit.Actors
 				_lastEmailedFileActor.Tell(new EmailedAtTime(DateTime.Now));
 			});
 		}
-
-		private EmailDetails GetEmailDetails()
-		{
-			var emailDetailsFile = File.ReadAllText(GetPath("EmailDetails.txt"));
-			var lines = emailDetailsFile.Split(new[] {'\n', '\r'}, StringSplitOptions.RemoveEmptyEntries);
-
-			var toLine = CheckStartOfString(lines[0], "to:");
-			var fromLine = CheckStartOfString(lines[1], "from:");
-			var hostLine = CheckStartOfString(lines[2], "host:");
-			var usernameLine = CheckStartOfString(lines[3], "username:");
-			var passwordLine = CheckStartOfString(lines[4], "password:");
-
-			return new EmailDetails
-			{
-				To = toLine,
-				From = fromLine,
-				Username = usernameLine,
-				Host = hostLine,
-				Password = passwordLine
-			};
-		}
-
-		private static string CheckStartOfString(string line, string start)
-		{
-			if (line.StartsWith(start) == false)
-			{
-				throw new InvalidProgramException($"Needs to start with '{start}'");
-			}
-			return line.Replace(start, "");
-		}
-
-		private string GetPath(string path)
-		{
-			return Path.GetFullPath($"..\\..\\..\\{path}");
-		}
+		
 		public class EmailedAtTime
 		{
 			public EmailedAtTime(DateTime now)
@@ -82,14 +49,5 @@ namespace ShamefulOldGit.Actors
 
 			public DateTime Now { get; set; }
 		}
-	}
-
-	public class EmailDetails
-	{
-		public string To { get; set; }
-		public string From { get; set; }
-		public string Host { get; set; }
-		public string Username { get; set; }
-		public string Password { get; set; }
 	}
 }

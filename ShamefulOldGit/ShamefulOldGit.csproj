@@ -49,6 +49,10 @@
       <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Optional, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Optional.3.0.0\lib\net452\Optional.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -66,6 +70,9 @@
     <Compile Include="ActorSelectionRouting.cs" />
     <Compile Include="Actors\BranchInfoAggregationActor.cs" />
     <Compile Include="Actors\BranchInfoActor.cs" />
+    <Compile Include="Actors\EmailBuilder.cs" />
+    <Compile Include="Actors\EmailDetails.cs" />
+    <Compile Include="Actors\EmailDetailsFileIncorrect.cs" />
     <Compile Include="Actors\MassEmailingActor.cs" />
     <Compile Include="Actors\LastEmailedFileActor.cs" />
     <Compile Include="Actors\Logger.cs" />
