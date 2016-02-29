@@ -52,6 +52,11 @@ namespace ShamefulOldGit
 					() => new EmailingActor(lastEmailedFileActor)),
 				ActorSelectionRouting.EmailingActorName);
 			
+			var massEmailingActor = MyActorSystem.ActorOf(
+				Props.Create(
+					() => new MassEmailingActor()),
+				ActorSelectionRouting.MassEmailingActorName);
+			
 			return true;
 		}
 

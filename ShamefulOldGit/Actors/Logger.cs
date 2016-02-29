@@ -16,8 +16,9 @@ namespace ShamefulOldGit.Actors
 			Console.WriteLine(line);
 			_log.Add($"{DateTime.Now.ToString("O")} - {line}");
 		}
-		public static void SaveToFile(string filePath)
+		public static void SaveToFile()
 		{
+			var filePath = Path.GetFullPath($"..\\..\\..\\Log.log");
 			var str = string.Join(Environment.NewLine, _log);
 
 			if (File.Exists(filePath))

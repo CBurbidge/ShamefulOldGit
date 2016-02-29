@@ -11,6 +11,10 @@ namespace ShamefulOldGit.Actors
 		private readonly IActorRef _gitBranchActor;
 		private readonly Func<DateTime> _getDateTimeNow;
 		private List<string> _oldNoMergedBranchNames;
+		private readonly string[] _exceptions =
+		{
+			"z-archive/"
+		};
 
 		public RepositoryActor(IActorRef gitBranchActor, Func<DateTime> getDateTimeNow)
 		{
@@ -27,6 +31,7 @@ namespace ShamefulOldGit.Actors
 
 					var oldNoMergedBranches = repository.Branches.Where(b => b.Commits.Any()
 																			  && b.IsRemote
+																			  && BranchNameDoesntContainExceptionString(b)
 																			  && BranchIsOld(b)
 																			  && BranchIsNoMerged(comparisonBranchCommitShas, b))
 						.ToList();
@@ -47,6 +52,12 @@ namespace ShamefulOldGit.Actors
 			});
 
 			
+		}
+
+		private bool BranchNameDoesntContainExceptionString(Branch b)
+		{
+			var anyOfTheExceptionsAreInTheBranchName = _exceptions.Any(e => b.Name.Contains(e));
+			return anyOfTheExceptionsAreInTheBranchName == false;
 		}
 
 		private bool BranchIsOld(Branch branch)

@@ -19,7 +19,7 @@ namespace ShamefulOldGit.Actors
 
 			Receive<ReceiveTimeout>(message =>
 			{
-				Logger.SaveToFile(Path.GetFullPath($"..\\..\\..\\Log.log"));
+				Logger.SaveToFile();
 				SetReceiveTimeout(TimeSpan.FromSeconds(Constants.SetTimeoutNumberOfSeconds));
 				Logger.WriteLine("Starting :-)");
 				File.WriteAllText(LastChecked, DateTime.Now.ToString("O"));

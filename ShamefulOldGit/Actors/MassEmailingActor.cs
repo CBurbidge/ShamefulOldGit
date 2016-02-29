@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using Akka.Actor;
@@ -8,6 +9,8 @@ namespace ShamefulOldGit.Actors
 {
 	public class MassEmailingActor : ReceiveActor
 	{
+		private const bool SendMessEmails = true;
+
 		public MassEmailingActor()
 		{
 			Receive<BranchInfoAggregationActor.BranchInfosToPrint>(message =>
@@ -16,11 +19,23 @@ namespace ShamefulOldGit.Actors
 				
 				foreach (var reposAndBranchInfo in message.ReposAndBranchInfos)
 				{
+#if DEBUG
+					string sendingTo = null;
+#else
 					var sendingTo = reposAndBranchInfo.BranchInfo.CommitterEmail;
+#endif
 					var subject = GetSubject(reposAndBranchInfo);
 					var content = GetContent(reposAndBranchInfo);
 
-					SendEmail(details, sendingTo, subject, content);
+					try
+					{
+						SendEmail(details, sendingTo, subject, content);
+					}
+					catch (Exception e)
+					{
+						Logger.WriteLine($"Exception happened - {e.Message}");
+						Logger.SaveToFile();
+					}
 				}
 			});
 		}
@@ -33,7 +48,9 @@ namespace ShamefulOldGit.Actors
 
 		private string GetSubject(RepoAndBranchInfo reposAndBranchInfo)
 		{
-			return "test";
+			var repoName = reposAndBranchInfo.DirPath.Split('\\').Last();
+
+			return $"{repoName} - {reposAndBranchInfo.BranchInfo.Name} - possibly stale";
 		}
 
 		private static void SendEmail(EmailDetails details, string sendingTo, string subject, string content)
@@ -50,11 +67,17 @@ namespace ShamefulOldGit.Actors
 			client.EnableSsl = true;
 			client.UseDefaultCredentials = false;
 			client.Credentials = new NetworkCredential(details.Username, details.Password);
-#if DEBUG
-			File.WriteAllText("testEmail.txt", content);
-#else
-			client.Send(mail);
-#endif
+
+			if (SendMessEmails)
+			{
+				client.Send(mail);
+			}
+			else
+			{
+				Logger.WriteLine("SENDING MASS EMAIS IS SET TO FALSE");
+				Logger.SaveToFile();
+				File.WriteAllText("testEmail.html", content);
+			}
 		}
 	}
 }

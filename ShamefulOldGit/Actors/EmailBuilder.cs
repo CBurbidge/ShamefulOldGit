@@ -71,7 +71,16 @@ table th {
 		{
 			var sb = new StringBuilder();
 			var repoName = repoAndBranchInfo.DirPath.Split('\\').Last();
-			sb.Append($"<p>Old un-merged branch in {repoName} repository.</p>");
+			var branchInfo = repoAndBranchInfo.BranchInfo;
+			sb.Append($"<p>Old un-merged branch <b>'{branchInfo.Name}'</b> in <b>{repoName}</b> repository.</p>");
+
+			sb.Append(
+				table(
+					AddColumnHeaders() + 
+					AddBranchInfo(branchInfo, branchInfo.Name, branchInfo.Message)
+				)
+			);
+
 			sb.Append($"<p>This branch is not merged into the branch '{Constants.ComparisonBranchName}' and is older than {Constants.MonthsPriorToNow} months.</p>");
 			sb.Append("<p>Please review whether this branch is useful and move to the z-archives folder or delete it if it is not.</p>");
 
@@ -82,33 +91,39 @@ table th {
 		private string BuildForRepo(string repoName, IGrouping<string, RepoAndBranchInfo> repoAndBranchInfos)
 		{
 			var sb = new StringBuilder();
-			sb.Append(
-				tr(
-					th("Age") +
-					th("Branch name") +
-					th("Committer's email address.") +
-					th("Commit message") +
-					th("Commit SHA start")
-					)
-				);
+			sb.Append(AddColumnHeaders());
 			var orderedByDateDesc = repoAndBranchInfos.OrderBy(b => b.BranchInfo.CommitterDate.Date);
 			foreach (var repoAndBranchInfo in orderedByDateDesc)
 			{
 				var branchInfo = repoAndBranchInfo.BranchInfo;
 				var branchName = branchInfo.Name.Length > Constants.EmailCommitBranchNameLength ? branchInfo.Name.Substring(0, Constants.EmailCommitBranchNameLength) : branchInfo.Name;
 				var commitMessage = branchInfo.Message.Length > Constants.EmailCommitMessageLength ? branchInfo.Message.Substring(0, Constants.EmailCommitMessageLength) : branchInfo.Message;
-				sb.Append(
-					tr(
-						td(branchInfo.CommitterDate.Humanize()) +
-						td(branchName) +
-						td(branchInfo.CommitterEmail) +
-						td(commitMessage) +
-						td(branchInfo.Sha.Substring(0, Constants.EmailNumberOfCharsOfShaToDisplay))
-						)
-					);
+				sb.Append(AddBranchInfo(branchInfo, branchName, commitMessage));
 			}
 
 			return h3(repoName) + table(sb.ToString());
+		}
+
+		private string AddBranchInfo(BranchInfo branchInfo, string branchName, string commitMessage)
+		{
+			return tr(
+				td(branchInfo.CommitterDate.Humanize()) +
+				td(branchName) +
+				td(branchInfo.CommitterEmail) +
+				td(commitMessage) +
+				td(branchInfo.Sha.Substring(0, Constants.EmailNumberOfCharsOfShaToDisplay))
+				);
+		}
+
+		private string AddColumnHeaders()
+		{
+			return tr(
+				th("Age") +
+				th("Branch name") +
+				th("Committer's email address.") +
+				th("Commit message") +
+				th("Commit SHA start")
+				);
 		}
 	}
 }
