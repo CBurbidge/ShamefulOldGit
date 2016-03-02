@@ -9,8 +9,8 @@ namespace ShamefulOldGit.Actors
 {
 	public class MassEmailingActor : ReceiveActor
 	{
-		private const bool SendMessEmails = true;
-
+		private readonly EmailBuilder _emailBuilder = new EmailBuilder();
+		
 		public MassEmailingActor()
 		{
 			Receive<BranchInfoAggregationActor.BranchInfosToPrint>(message =>
@@ -20,9 +20,12 @@ namespace ShamefulOldGit.Actors
 				foreach (var reposAndBranchInfo in message.ReposAndBranchInfos)
 				{
 #if DEBUG
-					string sendingTo = null;
+					string sendingTo = "fake@email.com";
 #else
-					var sendingTo = reposAndBranchInfo.BranchInfo.CommitterEmail;
+					var committerEmail = reposAndBranchInfo.BranchInfo.CommitterEmail;
+					var sendingTo = details.Exceptions.ContainsKey(committerEmail) 
+						? details.Exceptions[committerEmail] 
+						: committerEmail ;
 #endif
 					var subject = GetSubject(reposAndBranchInfo);
 					var content = GetContent(reposAndBranchInfo);
@@ -42,8 +45,7 @@ namespace ShamefulOldGit.Actors
 
 		private string GetContent(RepoAndBranchInfo reposAndBranchInfo)
 		{
-			var emailBuilder = new EmailBuilder();
-			return emailBuilder.BuildBranchEmail(reposAndBranchInfo);
+			return _emailBuilder.BuildBranchEmail(reposAndBranchInfo);
 		}
 
 		private string GetSubject(RepoAndBranchInfo reposAndBranchInfo)
@@ -68,7 +70,7 @@ namespace ShamefulOldGit.Actors
 			client.UseDefaultCredentials = false;
 			client.Credentials = new NetworkCredential(details.Username, details.Password);
 
-			if (SendMessEmails)
+			if (Constants.SendEmails)
 			{
 				client.Send(mail);
 			}

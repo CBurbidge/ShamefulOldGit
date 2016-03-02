@@ -1,5 +1,6 @@
 using System;
 using System.CodeDom;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Mail;
@@ -17,11 +18,18 @@ namespace ShamefulOldGit.Actors
 			_lastEmailedFileActor = lastEmailedFileActor;
 			Receive<PrinterActor.EmailContentToBeSent>(message =>
 			{
-				
+
 #if DEBUG
 				File.WriteAllText("..\\..\\Email.html", message.Content);
 #else
+				var content = message.Content;
 				var details = EmailDetails.Get();
+
+				foreach (var exception in details.Exceptions)
+				{
+					content = content.Replace(exception.Key, exception.Value);
+				}
+
 				var mail = new MailMessage();
 				var client = new SmtpClient();
 				client.Port = 587;
@@ -29,12 +37,15 @@ namespace ShamefulOldGit.Actors
 				mail.To.Add(new MailAddress(details.To));
 				mail.From = new MailAddress(details.From);
 				mail.Subject = EmailSubject;
-				mail.Body = message.Content;
+				mail.Body = content;
 				mail.IsBodyHtml = true;
 				client.EnableSsl = true;
 				client.UseDefaultCredentials = false;
 				client.Credentials = new NetworkCredential(details.Username, details.Password);
-				client.Send(mail);
+				if(Constants.SendEmails){
+					client.Send(mail);
+				}
+				
 #endif
 				_lastEmailedFileActor.Tell(new EmailedAtTime(DateTime.Now));
 			});

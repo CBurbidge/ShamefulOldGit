@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using Akka.Actor;
+using Humanizer;
 
 namespace ShamefulOldGit.Actors
 {
@@ -9,7 +10,7 @@ namespace ShamefulOldGit.Actors
 		private readonly string[] _repositoryPaths;
 		private readonly string LastChecked = "LastChecked.txt";
 		private readonly string FileName = "LastEmailed.txt";
-		
+
 
 		public LastEmailedFileActor(string[] repositoryPaths)
 		{
@@ -37,13 +38,17 @@ namespace ShamefulOldGit.Actors
 				DateTime lastEmailedDate;
 				if (DateTime.TryParse(lastEmailed, out lastEmailedDate))
 				{
-					if (lastEmailedDate < DateTime.Now.AddDays(-1 *Constants.HowManyDaysToWaitBeforeEmailAgain))
+					var canRunAfter = DateTime.Now.AddDays(-1 * Constants.HowManyDaysToWaitBeforeEmailAgain);
+					if (lastEmailedDate < canRunAfter)
 					{
 						TellToStart();
 					}
 					else
 					{
 						Logger.WriteLine($"Was last run less than 7 days ago at {lastEmailed}");
+						var timeUntilCanRun = DateTime.Parse(lastEmailed) - canRunAfter;
+						Logger.WriteLine($"Will run again in {timeUntilCanRun.Humanize()}");
+						Logger.SaveToFile();
 					}
 				}
 				else
@@ -57,6 +62,7 @@ namespace ShamefulOldGit.Actors
 			{
 				File.WriteAllText(FileName, message.Now.ToString("O"));
 				Logger.WriteLine($"Email last write time file saved to {Path.GetFullPath(FileName)}");
+				Logger.SaveToFile();
 			});
 		}
 

@@ -50,7 +50,7 @@ table th {
 		private readonly Func<string, string> td = str => $"<td>{str}</td>";
 		private readonly Func<string, string> tr = str => $"<tr>{str}</tr>\n";
 		private readonly Func<string, string> th = str => $"<th>{str}</th>\n";
-
+		private readonly EmailDetails _emailDetails = EmailDetails.Get();
 		public string BuildSummaryEmail(List<RepoAndBranchInfo> reposAndBranchInfos)
 		{
 			var sb = new StringBuilder();
@@ -106,10 +106,14 @@ table th {
 
 		private string AddBranchInfo(BranchInfo branchInfo, string branchName, string commitMessage)
 		{
+			var email = _emailDetails.Exceptions.ContainsKey(branchInfo.CommitterEmail)
+				? _emailDetails.Exceptions[branchInfo.CommitterEmail]
+				: branchInfo.CommitterEmail;
+
 			return tr(
 				td(branchInfo.CommitterDate.Humanize()) +
 				td(branchName) +
-				td(branchInfo.CommitterEmail) +
+				td(email) +
 				td(commitMessage) +
 				td(branchInfo.Sha.Substring(0, Constants.EmailNumberOfCharsOfShaToDisplay))
 				);
