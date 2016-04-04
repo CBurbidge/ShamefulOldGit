@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Akka.Actor;
 
 namespace ShamefulOldGit.Actors
@@ -12,9 +13,23 @@ namespace ShamefulOldGit.Actors
 		{
 			Receive<BranchInfoActor.RepositoryAndBranchInfo>(message =>
 			{
-				_reposAndBranchInfos.Add(message.RepoAndBranchInfo);
+				var containsBranchAlready = _reposAndBranchInfos
+					.Any(
+						r => r.BranchInfo.Name == message.RepoAndBranchInfo.BranchInfo.Name
+						&& r.DirPath == message.RepoAndBranchInfo.DirPath);
+
+				if (containsBranchAlready == false)
+				{
+					_reposAndBranchInfos.Add(message.RepoAndBranchInfo);
+				}
+
 				Context.ActorSelection(ActorSelectionRouting.RepositoriesCoordinatorActorPath)
 					.Tell(new BranchInfoReportedToAggregator(message.RepoAndBranchInfo));
+			});
+
+			Receive<Clear>(message =>
+			{
+				_reposAndBranchInfos.Clear();
 			});
 
 			Receive<RepositoriesCoordinatorActor.AllRepositoriesAccountedFor>(message =>
@@ -54,5 +69,9 @@ namespace ShamefulOldGit.Actors
 				RepoAndBranchInfo = branchName;
 			}
 		}
+	}
+
+	public class Clear
+	{
 	}
 }

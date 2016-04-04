@@ -78,6 +78,7 @@
     <Compile Include="Actors\Logger.cs" />
     <Compile Include="Actors\EmailingActor.cs" />
     <Compile Include="Actors\PrinterActor.cs" />
+    <Compile Include="Actors\Pruner.cs" />
     <Compile Include="Actors\RepositoriesCoordinatorActor.cs" />
     <Compile Include="Actors\RepositoryActor.cs" />
     <Compile Include="BranchInfo.cs" />

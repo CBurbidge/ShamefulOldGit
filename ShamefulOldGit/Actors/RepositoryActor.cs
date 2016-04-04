@@ -24,6 +24,7 @@ namespace ShamefulOldGit.Actors
 			Receive<StartRepository>(message =>
 			{
 				Logger.WriteLine($"Starting repo actor {message.RepositoryPath}");
+
 				using (var repository = new Repository(message.RepositoryPath))
 				{
 					var comparisonBranch = repository.Branches[Constants.ComparisonBranchName];

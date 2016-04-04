@@ -70,6 +70,8 @@ namespace ShamefulOldGit.Actors
 		{
 			Context.ActorSelection(ActorSelectionRouting.RepositoriesCoordinatorActorPath)
 				.Tell(new RepositoriesCoordinatorActor.RepositoriesToReportOn(_repositoryPaths));
+			Context.ActorSelection(ActorSelectionRouting.BranchInfoAggregationActorPath)
+				.Tell(new Clear());
 		}
 	}
 }

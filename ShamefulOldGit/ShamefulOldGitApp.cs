@@ -21,6 +21,8 @@ namespace ShamefulOldGit
 
 		public bool Start(HostControl hostControl)
 		{
+			PruneRepos();
+
 			var printerActor = MyActorSystem.ActorOf(
 				Props.Create<PrinterActor>(), 
 				ActorSelectionRouting.PrinterActorName);
@@ -58,6 +60,16 @@ namespace ShamefulOldGit
 				ActorSelectionRouting.MassEmailingActorName);
 			
 			return true;
+		}
+
+		private void PruneRepos()
+		{
+			var pruner = new Pruner();
+
+			foreach (var repositoryPath in _repositoryPaths)
+			{
+				pruner.SafePrune(repositoryPath);
+			}
 		}
 
 		public bool Stop(HostControl hostControl)
