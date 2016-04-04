@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using Akka.Actor;
+using LibGit2Sharp;
 using ShamefulOldGit.Actors;
 using Topshelf;
 
@@ -18,7 +19,7 @@ namespace ShamefulOldGit
 
 		public bool Start(HostControl hostControl)
 		{
-			PruneRepos();
+			FetchAndPruneRepos();
 
 			var printerActor = MyActorSystem.ActorOf(
 				Props.Create<PrinterActor>(), 
@@ -59,13 +60,13 @@ namespace ShamefulOldGit
 			return true;
 		}
 
-		private void PruneRepos()
+		private void FetchAndPruneRepos()
 		{
-			var pruner = new Pruner();
+			var wrapper = new GitWrapper();
 
 			foreach (var repositoryPath in _repositoryPaths)
 			{
-				pruner.SafePrune(repositoryPath);
+				wrapper.FetchThenSafePrune(repositoryPath);
 			}
 		}
 
