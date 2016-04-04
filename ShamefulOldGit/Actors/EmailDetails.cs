@@ -69,13 +69,8 @@ namespace ShamefulOldGit.Actors
 
 		public static EmailDetails Get()
 		{
-			var path = GetPath("EmailDetails.txt");
+			var path = Paths.GetTopPath("EmailDetails.txt");
 			return GetFromFilePath(path).ValueOrFailure("File is bad.");
-		}
-
-		private static string GetPath(string path)
-		{
-			return Path.GetFullPath($"..\\..\\..\\{path}");
 		}
 	}
 }

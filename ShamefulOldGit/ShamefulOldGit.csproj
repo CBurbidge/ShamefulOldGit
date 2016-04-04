@@ -82,6 +82,7 @@
     <Compile Include="Actors\RepositoriesCoordinatorActor.cs" />
     <Compile Include="Actors\RepositoryActor.cs" />
     <Compile Include="BranchInfo.cs" />
+    <Compile Include="Paths.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="RepoAndBranchInfo.cs" />
     <Compile Include="ShamefulOldGitApp.cs" />

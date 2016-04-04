@@ -5,6 +5,7 @@ namespace ShamefulOldGit.Actors
 {
 	public class Pruner
 	{
+		// The libgit doesn't seem to offer this so spin up a process.
 		public void SafePrune(string repoPath)
 		{
 			Logger.WriteLine($"Going to prune {repoPath}");

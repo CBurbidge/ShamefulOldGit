@@ -1,4 +1,5 @@
-﻿using Akka.Actor;
+﻿using System.IO;
+using Akka.Actor;
 using ShamefulOldGit.Actors;
 using Topshelf;
 
@@ -6,11 +7,7 @@ namespace ShamefulOldGit
 {
 	public class ShamefulOldGitApp : ServiceControl
 	{
-		private readonly string[] _repositoryPaths =
-		{
-			@"C:\Dev\Abide\Abide.Digby",
-			@"C:\Dev\Abide\Abide.Gaspode",
-		};
+		private readonly string[] _repositoryPaths = File.ReadAllLines(Paths.GetTopPath("Repos.txt"));
 
 		private readonly ActorSystem MyActorSystem;
 

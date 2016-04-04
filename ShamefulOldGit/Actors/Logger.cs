@@ -18,7 +18,7 @@ namespace ShamefulOldGit.Actors
 		}
 		public static void SaveToFile()
 		{
-			var filePath = Path.GetFullPath($"..\\..\\..\\Log.log");
+			var filePath = Paths.GetTopPath("Log.log");
 			var str = string.Join(Environment.NewLine, _log);
 
 			if (File.Exists(filePath))
